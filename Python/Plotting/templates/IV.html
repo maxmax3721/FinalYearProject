@@ -54,8 +54,17 @@
         data: chartData,
         options: {
           scales: {
-            xAxes: [{
-              type: 'linear', position: 'bottom'
+            xAxes: [{ 
+              ticks: {
+                precision: 0.01
+              },
+              type: 'linear', 
+              position: 'bottom'
+            }],
+            yAxes: [{ 
+              ticks: {
+                precision: 0.01
+              }
             }]
           },
           tooltips: {
