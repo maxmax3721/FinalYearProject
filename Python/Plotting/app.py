@@ -18,10 +18,10 @@ def IV():
     Voltages= Data['Voltage'].to_numpy()
     title= 'IV'
     #Converts lists to json format to be used in template
-    xyData = [{'x': int(Voltages[i]), 'z': int(Currents[i])} for i in range(len(Voltages))]
+    xyData = [{'x': Voltages[i], 'z': Currents[i]} for i in range(len(Voltages))]
     xyDatastring = str(xyData).replace('z', 'y')
-    xyDatastring = str(xyDatastring).replace('\'', '')
-    return render_template('IV.html', xydata= xyDatastring , title=title)
+    xyDatastring = str(xyDatastring).replace('\'','')
+    return render_template('IV.html', xydata= xyDatastring, title=title)
 
 if __name__ == "__main__":
     app.run(debug=True)

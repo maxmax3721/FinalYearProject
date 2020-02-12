@@ -13,9 +13,9 @@ if os.path.exists('data.csv'):
 
 
 try:
-    # open the serial port; only do this once as most arduinos reset when the serial port is opened
+    # open the serial port once (arduino will reset when serial port is opened)
     ser = serial.Serial('COM3', baudrate=57600)
-    # e.g. remove remains of Arduino bootloader or old data while the application was not running
+    # remove old data while the application was not running
     # not sure yet if it's 100% reliable; robin's approach is probably safer
     ser.flushInput()
 
