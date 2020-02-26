@@ -2,22 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Chart.js Example</title>
+    <title>IV.js Example</title>
     <!-- import plugin script -->
     <script src='static/Chart.min.js'></script>
+    <script src='static/jquery-3.4.1.min.js'></script>
+    <input type='button' value="Update" onclick="updateData();">
   </head>
   <body>
     <h1>IV data</h1>
     <!-- bar chart canvas element -->
     <canvas id="myChart" width="600" height="400"></canvas>
-    <p id="pointSelected">Point selected:</p>
-
     <script>
-      // Global parameters:
-      // do not resize the chart canvas when its container does (keep at 600x400px)
-      Chart.defaults.global.responsive = false;
 
-      // define the chart data
+      // do not resize the chart canvas when its container does
+      Chart.defaults.global.responsive = false;
+      
+      // define chart data
       var chartData = {
         datasets : [{
             label: '{{ Title }}',
@@ -40,9 +40,10 @@
             pointHitRadius: 0.1,
             data : {{xydata}},       
             spanGaps: false
-            
-        }]
+          }
+        ]
       }
+ 
 
       // get chart canvas
       var holder = document.getElementById("myChart");
@@ -51,19 +52,17 @@
       // create the chart using the chart canvas
       var myChart = new Chart(ctx, {
         type: 'scatter',
-        data: chartData,
-        options: {
-          tooltips: {
-            enabled: true,
-            mode: 'single',
-            callbacks: {
-              label: function(tooltipItems, data) {
-                       return tooltipItems.yLabel + ' degrees';
-                     }
-            }
-          },
-        }
-      }); 
+        data: chartData
+      });
+      
+      //Read JSON from url/Stuff
+      function updateData() {
+        console.log("Update Data");
+        newdata= $.ajax({type: "GET", url: "http://127.0.0.1:5000/Stuff", async: false}).responseText;
+        myChart.chartData.datasets.data = newdata;
+        myChart.update();
+      }
+
     </script>
 
   </body>

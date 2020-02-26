@@ -19,7 +19,8 @@ try:
     # not sure yet if it's 100% reliable; robin's approach is probably safer
     ser.flushInput()
 
-    while True:
+    i=0
+    while i<256:
         # check if bytes received
         numBytes = ser.inWaiting()
         if(numBytes > 0):
@@ -31,6 +32,7 @@ try:
             file = open('data.csv', 'ab')
             file.write(serBytes)
             file.close()
+            i=i+1
 
             # check if <esc> was pressed; stop if so
         if keyboard.is_pressed('esc'):
