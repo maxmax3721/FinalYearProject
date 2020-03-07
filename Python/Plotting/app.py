@@ -4,6 +4,7 @@ import pandas as pd
 import numpy
 import os
 import random
+import json
 
 app = Flask(__name__)
 
@@ -21,10 +22,10 @@ def index():
     xyData = [{'x': Voltages[i], 'z': Currents[i]} for i in range(len(Voltages))]
     xyDatastring = str(xyData).replace('z', 'y')
     xyDatastring = str(xyDatastring).replace('\'','')
-    return render_template('IV.html', xydata= xyDatastring, title=title)
+    return render_template('IV.html', IVData= xyDatastring, title=title)
 
-@app.route("/Stuff", methods = ['GET'])
-def Stuff():
+@app.route("/Data", methods = ['GET'])
+def Data():
 
     Data = pd.read_csv (os.getcwd()+('\\data.csv'))
     # sort dataframe into accending voltage values
@@ -35,11 +36,11 @@ def Stuff():
     Voltages= Data['Voltage'].to_numpy()
     title= 'IV'
     #Converts lists to json format to be used in template
-    xyData = [{'x': Voltages[i], 'z': Currents[i]+random.random()} for i in range(len(Voltages))]
+    xyData = [{'x': Voltages[i], 'y': Currents[i]+random.random()} for i in range(len(Voltages))]
     xyDatastring = str(xyData).replace('z', 'y')
     xyDatastring = str(xyDatastring).replace('\'','')
     
-    return xyDatastring
+    return jsonify(xyData)
 
 
 if __name__ == "__main__":

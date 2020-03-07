@@ -6,7 +6,8 @@
     <!-- import plugin script -->
     <script src='static/Chart.min.js'></script>
     <script src='static/jquery-3.4.1.min.js'></script>
-    <input type='button' value="Update" onclick="updateData();">
+    <script src='static/d3/d3.min.js'></script>
+    <input type='button' value="Update" onclick="myChart.destroy(); updateData();">
   </head>
   <body>
     <h1>IV data</h1>
@@ -16,7 +17,7 @@
 
       // do not resize the chart canvas when its container does
       Chart.defaults.global.responsive = false;
-      
+
       // define chart data
       var chartData = {
         datasets : [{
@@ -38,7 +39,7 @@
             pointHoverBorderWidth: 2,
             pointRadius: 0.01,
             pointHitRadius: 0.1,
-            data : {{xydata}},       
+            data : {{IVData}},       
             spanGaps: false
           }
         ]
@@ -54,13 +55,62 @@
         type: 'scatter',
         data: chartData
       });
-      
+
       //Read JSON from url/Stuff
+      console.log(chartData.datasets[0].data)
+
+      function getData(){
+        console.log("Get Data");
+        text= $.ajax({type: "GET", url: "http://127.0.0.1:5000/Data", async: false}).responseText;
+        Data=JSON.parse(text);
+        return(Data)
+      }
+      
       function updateData() {
         console.log("Update Data");
-        newdata= $.ajax({type: "GET", url: "http://127.0.0.1:5000/Stuff", async: false}).responseText;
-        myChart.chartData.datasets.data = newdata;
-        myChart.update();
+        var Data= getData();
+        var TestData=[{x:1,y:2}, {x:2,y:2}];
+        console.log(Data);
+        console.log(TestData);
+        Chart.defaults.global.responsive = false;
+    
+        // define chart data
+        var chartData = {
+          datasets : [{
+              label: '{{ Title }}',
+              fill: false,
+              lineTension: 0.1,
+              backgroundColor: "rgba(75,192,192,0.4)",
+              borderColor: "rgba(75,192,192,1)",
+              borderCapStyle: 'butt',
+              borderDash: [],
+              borderDashOffset: 0.0,
+              borderJoinStyle: 'miter',
+              pointBorderColor: "rgba(75,192,192,1)",
+              pointBackgroundColor: "#fff",
+              pointBorderWidth: 1,
+              pointHoverRadius: 5,
+              pointHoverBackgroundColor: "rgba(75,192,192,1)",
+              pointHoverBorderColor: "rgba(220,220,220,1)",
+              pointHoverBorderWidth: 2,
+              pointRadius: 0.01,
+              pointHitRadius: 0.1,
+              data : Data,       
+              spanGaps: false
+            }
+          ]
+        }
+        
+        // get chart canvas
+        var holder = document.getElementById("myChart");
+        var ctx = document.getElementById("myChart").getContext("2d");
+
+        // create the chart using the chart canvas
+        var myChart = new Chart(ctx, {
+          type: 'scatter',
+          data: chartData
+        });
+          
       }
 
     </script>
