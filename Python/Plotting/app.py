@@ -10,29 +10,44 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    
-    title= 'IV'
+    return render_template('IV.html')
 
-    return render_template('IV.html', title=title)
+@app.route("/IVData", methods = ['GET'])
+def GetIVData():
 
-@app.route("/Data", methods = ['GET'])
-def Data():
-
-    Data = pd.read_csv (os.getcwd()+('\\data.csv'))
-    # sort dataframe into accending voltage values
-    Data = Data.sort_values(by=['Voltage'])
-    #convert dataframe to separate lists
-    rand=random.randint(1,100)
-    Currents= Data['Current'].to_numpy()
-    Voltages= Data['Voltage'].to_numpy()
-    title= 'IV'
+    Voltages, Currents = ReadCsv()
     #Converts lists to json format to be used in template
-    xyData = [{'x': Voltages[i], 'y': Currents[i]+50*random.random()} for i in range(len(Voltages))]
-    xyDatastring = str(xyData).replace('z', 'y')
-    xyDatastring = str(xyDatastring).replace('\'','')
+    xyData = [{'x': Voltages[i], 'y': Currents[i]} for i in range(len(Voltages))]
     
     return jsonify(xyData)
 
+@app.route("/PVData", methods = ['GET'])
+def GetPVData():
+
+    Voltages, Currents = ReadCsv()
+    #Converts lists to json format to be used in template
+    xyData = [{'x': Voltages[i], 'y': Currents[i]*Voltages[i]} for i in range(len(Voltages))]
+    return jsonify(xyData)
+
+def ReadCsv():
+    data = pd.read_csv (os.getcwd()+('\\data.csv'))
+    # sort dataframe into accending voltage values
+    data = data.sort_values(by=['Voltage'])
+    #convert dataframe to separate lists
+    rand=random.randint(1,100)
+    Currents= data['Current'].to_numpy()
+    Voltages= data['Voltage'].to_numpy()
+    return Voltages, Currents
+
+@app.route("/OpPoint", methods = ['GET'])
+def GetVoltage():
+    Voltages, Currents = ReadCsv()
+    #arduino read voltage
+    V=12+random.random()*6
+    #interpolate voltage values to find current value 
+    I=numpy.interp(V,Voltages,Currents)
+    return jsonify(x=V,y=I)
+
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True,threaded=False)#made single threaded so csv isnt read while being written
