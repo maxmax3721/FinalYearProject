@@ -12,6 +12,9 @@ import time
 
 app = Flask(__name__)
 
+global datapoints
+datapoints=25
+
 @app.route("/")
 def index():
     global ser
@@ -22,47 +25,45 @@ def index():
 @app.route("/IVData", methods = ['GET'])
 def GetIVData():
     GetCharacteristic()
-    Voltages, Currents = ReadCsv()
+    Voltages, Currents, Vop = ReadCsv()
     #Converts lists to json format to be used in template
-    xyData = [{'x': Voltages[i], 'y': Currents[i]} for i in range(len(Voltages))]
+    xyData = [{'x': Voltages[i], 'y': Currents[i]} for i in range(datapoints)]
     
     return jsonify(xyData)
 
 @app.route("/PVData", methods = ['GET'])
 def GetPVData():
-    Voltages, Currents = ReadCsv()
+    Voltages, Currents, Vop = ReadCsv()
     #Converts lists to json format to be used in template
-    xyData = [{'x': Voltages[i], 'y': Currents[i]*Voltages[i]} for i in range(len(Voltages))]
+    xyData = [{'x': Voltages[i], 'y': Currents[i]*Voltages[i]} for i in range(datapoints)]
     return jsonify(xyData)
 
 
 @app.route("/CurrentOpPoint", methods = ['GET'])
 def GetCurrent():
-    Voltages, Currents = ReadCsv()
-    #arduino read voltage
-    V=float(GetVoltage())
+    Voltages, Currents, Vop = ReadCsv()
     #interpolate voltage values to find current value 
-    I=numpy.interp(V,Voltages,Currents)
-    return jsonify(x=V,y=I)
+    I=numpy.interp(Vop,Voltages,Currents)
+    return jsonify(x=Vop,y=I)
 
 @app.route("/PowerOpPoint", methods = ['GET'])
 def GetPower():
-    Voltages, Currents = ReadCsv()
+    Voltages, Currents, Vop = ReadCsv()
     Powers=Voltages*Currents
-    #arduino read voltage
-    V=float(GetVoltage())
     #interpolate voltage values to find current value 
-    P=numpy.interp(V,Voltages,Powers)
-    return jsonify(x=V,y=P)
+    P=numpy.interp(Vop,Voltages,Powers)
+    return jsonify(x=Vop,y=P)
 
 def ReadCsv():
     data = pd.read_csv (os.getcwd()+('\\data.csv'))
     # sort dataframe into accending voltage values
+    Vop = data.at[datapoints,'Voltage']
+    data = data.drop(datapoints, axis=0)
     data = data.sort_values(by=['Voltage'])
     #convert dataframe to separate lists
     Currents= data['Current'].to_numpy()
     Voltages= data['Voltage'].to_numpy()
-    return Voltages, Currents
+    return Voltages, Currents, Vop
 
 def GetCharacteristic():
 
@@ -81,7 +82,7 @@ def GetCharacteristic():
     file.close()
 
     i=0
-    while i<25:
+    while i<datapoints+1:
         # check if bytes received
         numBytes = ser.inWaiting()
         if(numBytes > 0):
@@ -94,24 +95,6 @@ def GetCharacteristic():
             file.write(serBytes)
             file.close()
             i=i+1
-
-def GetVoltage():
-
-    # open the serial port once (arduino will reset when serial port is opened)
-
-    # remove old data while the application was not running
-    ser.flushInput()
-    time.sleep(1)
-    ser.write('v')
-    # check if bytes received
-    numBytes = ser.inWaiting()
-    while(numBytes == 0):
-        numBytes = ser.inWaiting()
-  
-    serBytes = ser.readline()
-    serBytes = serBytes.replace("\n","")
-
-    return(serBytes)
 
 if __name__ == "__main__":
     app.run(debug=True,threaded=False)#made single threaded so csv isnt read while being written

@@ -65,6 +65,13 @@ void loop() {
 
         digitalWrite(Relay,HIGH);
 
+        delay(500);
+        
+        vOUT = analogRead(A0)*(5.0/ 1024.0);
+        vIN = vOUT / (r11/(r10+r11));
+        Serial.print(vIN);
+        Serial.print ("\n");
+
       }else{
         vOUT = analogRead(A0)*(5.0/ 1024.0);
         vIN = vOUT / (r11/(r10+r11));
