@@ -5,16 +5,23 @@ import numpy
 import os
 import random
 import json
+import sys
+import serial
+import keyboard
+import time
 
 app = Flask(__name__)
 
 @app.route("/")
 def index():
+    global ser
+    ser = serial.Serial('COM3', baudrate=9600)
+    time.sleep(1)
     return render_template('IV.html')
 
 @app.route("/IVData", methods = ['GET'])
 def GetIVData():
-
+    GetCharacteristic()
     Voltages, Currents = ReadCsv()
     #Converts lists to json format to be used in template
     xyData = [{'x': Voltages[i], 'y': Currents[i]} for i in range(len(Voltages))]
@@ -23,31 +30,88 @@ def GetIVData():
 
 @app.route("/PVData", methods = ['GET'])
 def GetPVData():
-
     Voltages, Currents = ReadCsv()
     #Converts lists to json format to be used in template
     xyData = [{'x': Voltages[i], 'y': Currents[i]*Voltages[i]} for i in range(len(Voltages))]
     return jsonify(xyData)
+
+
+@app.route("/CurrentOpPoint", methods = ['GET'])
+def GetCurrent():
+    Voltages, Currents = ReadCsv()
+    #arduino read voltage
+    V=float(GetVoltage())
+    #interpolate voltage values to find current value 
+    I=numpy.interp(V,Voltages,Currents)
+    return jsonify(x=V,y=I)
+
+@app.route("/PowerOpPoint", methods = ['GET'])
+def GetPower():
+    Voltages, Currents = ReadCsv()
+    Powers=Voltages*Currents
+    #arduino read voltage
+    V=float(GetVoltage())
+    #interpolate voltage values to find current value 
+    P=numpy.interp(V,Voltages,Powers)
+    return jsonify(x=V,y=P)
 
 def ReadCsv():
     data = pd.read_csv (os.getcwd()+('\\data.csv'))
     # sort dataframe into accending voltage values
     data = data.sort_values(by=['Voltage'])
     #convert dataframe to separate lists
-    rand=random.randint(1,100)
     Currents= data['Current'].to_numpy()
     Voltages= data['Voltage'].to_numpy()
     return Voltages, Currents
 
-@app.route("/OpPoint", methods = ['GET'])
-def GetVoltage():
-    Voltages, Currents = ReadCsv()
-    #arduino read voltage
-    V=12+random.random()*6
-    #interpolate voltage values to find current value 
-    I=numpy.interp(V,Voltages,Currents)
-    return jsonify(x=V,y=I)
+def GetCharacteristic():
 
+    if os.path.exists('data.csv'):
+        os.remove('data.csv')
+
+    # open the serial port once (arduino will reset when serial port is opened)
+    
+    # remove old data while the application was not running
+    ser.flushInput()
+    #tell arduino to send data
+    ser.write('s')
+
+    file = open('data.csv', 'ab')
+    file.write('Voltage,Current\n')
+    file.close()
+
+    i=0
+    while i<25:
+        # check if bytes received
+        numBytes = ser.inWaiting()
+        if(numBytes > 0):
+            serBytes = ser.readline()
+            print(serBytes)
+            # open file for binary (!) appending; not using binary results in
+            # 1) error telling you 'must be str, not bytes'
+            # 2) convering using str(ser_bytes) results in unwanted quotation marks in the file (as shown in the result of above print)
+            file = open('data.csv', 'ab')
+            file.write(serBytes)
+            file.close()
+            i=i+1
+
+def GetVoltage():
+
+    # open the serial port once (arduino will reset when serial port is opened)
+
+    # remove old data while the application was not running
+    ser.flushInput()
+    time.sleep(1)
+    ser.write('v')
+    # check if bytes received
+    numBytes = ser.inWaiting()
+    while(numBytes == 0):
+        numBytes = ser.inWaiting()
+  
+    serBytes = ser.readline()
+    serBytes = serBytes.replace("\n","")
+
+    return(serBytes)
 
 if __name__ == "__main__":
     app.run(debug=True,threaded=False)#made single threaded so csv isnt read while being written

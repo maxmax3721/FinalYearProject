@@ -31,17 +31,27 @@
       // define chart data
       var chartData = {
         datasets : [{
-            //Operating point dataset
-            label: 'Operating Point',
+            // current Operating point- dataset 0
+            label: 'Operating Current',
             yAxisID: "y-axis-1",
             xAxisID: "x-axis-1",
-            pointBackgroundColor: "rgba(255,102,0,1)",
-            borderColor: "rgba(255,102,0,1)",
-            backgroundColor:"rgba(255,102,0,0.4)",
+            pointBackgroundColor: "rgba(51,51,255,1)",
+            borderColor: "rgba(51,51,255,1)",
+            backgroundColor:"rgba(51,51,255,0.4)",
             pointRadius: 5,
-            data : [{x:15,y:200}],      
+            data : [],      
             spanGaps: false},
-            //IV dataset
+            // power Operating point- dataset 1
+            {label: 'Operating Power',
+            yAxisID: "y-axis-2",
+            xAxisID: "x-axis-1",
+            pointBackgroundColor: "rgba(204,0,0,1)",
+            borderColor: "rgba(204,0,0,1)",
+            backgroundColor:"rgba(204,0,0,0.4)",
+            pointRadius: 5,
+            data : [],      
+            spanGaps: false},
+            //IV - dataset 2
             {label: 'current',
             yAxisID: "y-axis-1",
             xAxisID: "x-axis-1",
@@ -51,7 +61,7 @@
             borderColor: "rgba(75,192,192,1)",
             data : IVData,       
             spanGaps: false},
-            //PV dataset
+            //PV - dataset 3
             {label: 'power',
             yAxisID:"y-axis-2",
             xAxisID: "x-axis-1",
@@ -60,6 +70,26 @@
             backgroundColor: "rgba(241,28,28,0.4)",
             borderColor: "rgba(241,28,28,1)",
             data : PVData,       
+            spanGaps: false},
+            //previous IV - dataset 4
+            {label: 'previous current',
+            yAxisID: "y-axis-1",
+            xAxisID: "x-axis-1",
+            fill: false,
+            lineTension: 0.1,
+            backgroundColor: "rgba(75,192,192,0.4)",
+            borderColor: "rgba(75,192,192,0.4)",
+            data : [],       
+            spanGaps: false},
+            //previous PV - dataset 5
+            {label: 'previous power',
+            yAxisID:"y-axis-2",
+            xAxisID: "x-axis-1",
+            fill: false,
+            lineTension: 0.1,
+            backgroundColor: "rgba(241,28,28,0.4)",
+            borderColor: "rgba(241,28,28,0.4)",
+            data : [],       
             spanGaps: false}
         ]
       }
@@ -118,16 +148,21 @@
       function updateData() {
         console.log("Update Data");
         var Data= getData();
-        chartData.datasets[1].data=IVData;
-        chartData.datasets[2].data=PVData;
+        chartData.datasets[4].data=chartData.datasets[2].data;
+        chartData.datasets[5].data=chartData.datasets[3].data;
+        chartData.datasets[2].data=IVData;
+        chartData.datasets[3].data=PVData;
         myChart.update();
           
       }
 
       function updateOpPoint() {
-        text= $.ajax({type: "GET", url: "http://127.0.0.1:5000/OpPoint", async: false}).responseText;
-        Data=JSON.parse(text);
-        chartData.datasets[0].data[0]=Data;
+        currentJson= $.ajax({type: "GET", url: "http://127.0.0.1:5000/CurrentOpPoint", async: false}).responseText;
+        powerJson= $.ajax({type: "GET", url: "http://127.0.0.1:5000/PowerOpPoint", async: false}).responseText;
+        currentData=JSON.parse(currentJson);
+        powerData=JSON.parse(powerJson);
+        chartData.datasets[0].data[0]=currentData;
+        chartData.datasets[1].data[0]=powerData;
         myChart.update();
         setTimeout(updateOpPoint,1000)
       }
