@@ -7,8 +7,7 @@
     <script src='static/Chart.min.js'></script>
     <script src='static/jquery-3.4.1.min.js'></script>
     <input type='button' value="Update Characteristic" onclick="updateData();">
-    <input type='button' value="Star Continuous Update" onclick="continuousUpdate(1);">
-    <input type='button' value="Stop Continuous Update" onclick="continuousUpdate(0);">
+    <input type='button' value="Star Continuous Update" onclick="continuousUpdate();">
   </head>
   <body>
     <h1>Solar Panel Live Characteristic and operating point</h1>
@@ -163,11 +162,10 @@
           
       }
 
-      function continuousUpdate(state){
+      function continuousUpdate(){
         updateData()
-        if (state==1){
-          setTimeout(continuousUpdate(1),1000)
-        }
+        setTimeout(continuousUpdate,1000)
+      
       }
 
     
