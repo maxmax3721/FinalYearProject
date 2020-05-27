@@ -1,39 +1,48 @@
+<!-- #REFERENCES
+The files from this tutorial were used as an initial template.
+http://www.patricksoftwareblog.com/flask-tutorial/ 
+this gave starting point code for plotting a single dataset using chart.js
+includeing the format of the HTML file and the format for the chart data variable
+all plugin imports, button creation and javascript functions were writen by Max Bowker -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>IV.js</title>
+    <title>IV.js Example</title>
     <!-- import plugin scripts -->
-    <script src='static/Chart.min.js'></script>
-    <script src='static/jquery-3.4.1.min.js'></script>
+    <script src='static/Chart.min.js'></script> <!--https://www.chartjs.org/docs/latest/getting-started/installation.html-->
+    <script src='static/jquery-3.4.1.min.js'></script><!--https://jquery.com/download/-->
+    <!-- create buttons to trigger data updates -->
     <input type='button' value="Update Characteristic" onclick="updateData();">
-    <input type='button' value="Toggle Continuous Update" onclick="toggleContinuousUpdate();">
+    <input type='button' value="Toggle continuousUpdate" onclick="toggleContinuousUpdate();">
     <input type='button' value="Save Current Dataset" onclick="saveData();">
   </head>
   <body>
     <h1>Solar Panel Live Characteristic and operating point</h1>
-    <!-- bar chart canvas element -->
+    <!-- specify canvas size and id -->
     <canvas id="myChart" width="1400" height="500"></canvas>
     <script>
-      
-      //Gets datasets from URLs and returns 'Data' array containing all datasets 
+
+      //Get new characteristic data
       function getData(){
         console.log("Get Data");
-        //AJAX gets data as text from URLS
+        //Get JSON objects as text
         IVJson= $.ajax({type: "GET", url: "http://127.0.0.1:5000/IVData", async: false}).responseText;
         PVJson= $.ajax({type: "GET", url: "http://127.0.0.1:5000/PVData", async: false}).responseText;
         currentJson= $.ajax({type: "GET", url: "http://127.0.0.1:5000/CurrentOpPoint", async: false}).responseText;
         powerJson= $.ajax({type: "GET", url: "http://127.0.0.1:5000/PowerOpPoint", async: false}).responseText;
-        //parse data into JSON Object
+        //Parse text to JSON 
         IVData=JSON.parse(IVJson);
         PVData=JSON.parse(PVJson)
         Iop=JSON.parse(currentJson);
         Pop=JSON.parse(powerJson);
         Data=[IVData,PVData,Iop,Pop];
+        //Return array of JSON objects 
         return(Data);
       }
       
-      // define chart data
+      // define chart data JSON object
+      //creation of chart data variable and all chart.js documentation found at https://www.chartjs.org/docs/latest/
       var chartData = {
         datasets : [{
             // current Operating point- dataset 0
@@ -44,7 +53,7 @@
             borderColor: "rgba(51,51,255,1)",
             backgroundColor:"rgba(51,51,255,0.4)",
             pointRadius: 5,
-            data : [],      
+            data : [], //data variable that new data is written to      
             spanGaps: false},
             // power Operating point- dataset 1
             {label: 'Operating Power',
@@ -54,9 +63,9 @@
             borderColor: "rgba(204,0,0,1)",
             backgroundColor:"rgba(204,0,0,0.4)",
             pointRadius: 5,
-            data : [],      
+            data : [],//data variable that new data is written to 
             spanGaps: false},
-            //IV - dataset 2
+            //IV data - dataset 2
             {label: 'current',
             yAxisID: "y-axis-1",
             xAxisID: "x-axis-1",
@@ -64,9 +73,9 @@
             lineTension: 0.1,
             backgroundColor: "rgba(75,192,192,0.4)",
             borderColor: "rgba(75,192,192,1)",
-            data : [],       
+            data : [],//data variable that new data is written to      
             spanGaps: false},
-            //PV - dataset 3
+            //PV data - dataset 3
             {label: 'power',
             yAxisID:"y-axis-2",
             xAxisID: "x-axis-1",
@@ -74,9 +83,9 @@
             lineTension: 0.1,
             backgroundColor: "rgba(241,28,28,0.4)",
             borderColor: "rgba(241,28,28,1)",
-            data : [],       
+            data : [],//data variable that new data is written to       
             spanGaps: false},
-            //previous IV - dataset 4
+            //SAVED IV - dataset 4
             {label: 'saved current',
             yAxisID: "y-axis-1",
             xAxisID: "x-axis-1",
@@ -84,9 +93,9 @@
             lineTension: 0.1,
             backgroundColor: "rgba(75,192,192,0.4)",
             borderColor: "rgba(75,192,192,0.4)",
-            data : [],       
+            data : [], //data variable that old data is saved to      
             spanGaps: false},
-            //previous PV - dataset 5
+            //SAVED PV - dataset 5
             {label: 'saved power',
             yAxisID:"y-axis-2",
             xAxisID: "x-axis-1",
@@ -94,31 +103,32 @@
             lineTension: 0.1,
             backgroundColor: "rgba(241,28,28,0.4)",
             borderColor: "rgba(241,28,28,0.4)",
-            data : [],       
+            data : [], //data variable that old data is saved to          
             spanGaps: false}
         ]
       }
  
-
       // get chart canvas
       var holder = document.getElementById("myChart");
       var ctx = document.getElementById("myChart").getContext("2d");
 
       // create the chart using the chart canvas
+      // define myChart JSON object
+      //creation of myChart variable and all chart.js documentation found at https://www.chartjs.org/docs/latest/
       var myChart = new Chart(ctx, {
         type: 'scatter',
         data: chartData,
         options: {
           scales: {
             yAxes: [{
-              // ticks: {
-              //   min: 0,
-              //   max: 100,
-              // },
+                ticks: {
+                  min: 0,
+                  max: 20,
+                },// specify axis so it doen't autosize- makes changes in characteristic clearer
               type: "linear",
               display: true,
               position: "left",
-              id: "y-axis-1",
+              id: "y-axis-1",//Current axis on left
               scaleLabel: {
                 display: true,
                 labelString: 'Current (mA)'
@@ -126,12 +136,12 @@
               }, {
               ticks: {
                 min: 0,
-                max: 1000,
-              },
+                max: 200,
+              },// specify axis so it doen't autosize- makes changes in characteristic clearer
               type: "linear",
               display: true,
               position: "right",
-              id: "y-axis-2",
+              id: "y-axis-2",//Power axis on right
               scaleLabel: {
                 display: true,
                 labelString: 'Power(mW)'
@@ -139,7 +149,7 @@
 
               // grid line settings
               gridLines: {
-                  drawOnChartArea: false, // only show gridline for one axis
+                  drawOnChartArea: false, // only want the grid lines for one axis to show up
               },
             }],
             xAxes: [{
@@ -149,7 +159,7 @@
               },
               type: "linear",
               display: true,
-              id: "x-axis-1",
+              id: "x-axis-1",//Voltage axis 
               scaleLabel: {
                 display: true,
                 labelString: 'Voltage (V)'
@@ -160,27 +170,29 @@
 
       });
 
-      //Write new JSON data objects to Chart Data object and update chart
+      
       function updateData() {
-        
+        //Call for new datasets 
         var [IVData,PVData,Iop,Pop]= getData();
+        //write new JSON datasets to datasets in the chart data variable
         chartData.datasets[0].data=[Iop];
         chartData.datasets[1].data=[Pop];
         chartData.datasets[2].data=IVData;
         chartData.datasets[3].data=PVData;
+        //Call chart'js to update the chart 
         myChart.update();
           
       }
 
-      //Write current dataset to saved data dataset
+      //write current IV and PV dataset to the saved IV and saved PV datasets in the chartData variable
       function saveData() {
         chartData.datasets[4].data=chartData.datasets[2].data;
         chartData.datasets[5].data=chartData.datasets[3].data;
       }
 
+      
       var updating=false
-
-      //When continuous update pressed one, set updating=true, when pressed again, set updating=false 
+      //toggle 'updating'
       function toggleContinuousUpdate(){
         if(updating)
         {
@@ -193,19 +205,13 @@
         }
       }
 
-      //Update chart every second while updating=true
+      //Update plots every second until updating is set to false
       function continuousUpdate(){
         if(updating){
           updateData();
           setTimeout(continuousUpdate,1000);
         }
       }
-
-        
-        
-      
-
-    
     </script>
 
   </body>
